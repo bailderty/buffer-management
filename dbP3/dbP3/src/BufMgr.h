@@ -4,28 +4,28 @@
 class BufMgr
 {
     private:
-        FrameId clockHand; // clock hand for clock alg
-        BufHashTbl *hashTable; // hash table mapping (File, page) to framed number
-        BufDesc *bufDescTabe; // BufDesc objects, one per frame
+        badgerdb::FrameId clockHand; // clock hand for clock alg
+        badgerdb::BufHashTbl *hashTable; // hash table mapping (File, page) to framed number
+        badgerdb::BufDesc *bufDescTabe; // BufDesc objects, one per frame
         std::uint32_t numBufs; // Numer of frames in the buffer pool
-        BufStats bufStats; // Statistics about buffer pool usage
+        badgerdb::BufStats bufStats; // Statistics about buffer pool usage
 
 
 
-    void allocBuf(FrameId & frame);
+    void allocBuf(badgerdb::FrameId & frame);
     void advanceClock(); //Advance clock to next frame in the buffer pool
 
     public:
-       Page *bufPool;   // actual buffer pool
+       badgerdb::Page *bufPool;   // actual buffer pool
 
        BufMgr(std::uint32_t bufs); // Constructor
        ~BufMgr(); // Destructor
       
-       void readPage(File* file, const PageId PageNo, Page*& page);
-       void unPinPage(File* file, const PageId PageNo, const bool dirty);
-       void allocPage(File* file, PageId& PageNo, Page*& page);
-       void disposePage(File* file, const PageId pageNo);
-       void flushFile(const File* file);
+       void readPage(badgerdb::File* file, const badgerdb::PageId PageNo, badgerdb::Page*& page);
+       void unPinPage(badgerdb::File* file, const badgerdb::PageId PageNo, const bool dirty);
+       void allocPage(badgerdb::File* file, badgerdb::PageId& PageNo, badgerdb::Page*& page);
+       void disposePage(badgerdb::File* file, const badgerdb::PageId pageNo);
+       void flushFile(const badgerdb::File* file);
 
 
 };
