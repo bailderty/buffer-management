@@ -24,7 +24,7 @@
 		74D5A4F01C9DD9AF00FE1F47 /* buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = buffer.h; sourceTree = "<group>"; };
 		74D5A4F11C9DD9AF00FE1F47 /* bufHashTbl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bufHashTbl.cpp; sourceTree = "<group>"; };
 		74D5A4F21C9DD9AF00FE1F47 /* bufHashTbl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bufHashTbl.h; sourceTree = "<group>"; };
-		74D5A4F31C9DD9AF00FE1F47 /* Contributors */ = {isa = PBXFileReference; lastKnownFileType = text; path = Contributors; sourceTree = "<group>"; };
+		74D5A4F31C9DD9AF00FE1F47 /* Contributors */ = {isa = PBXFileReference; lastKnownFileType = text; name = Contributors; path = ../Contributors; sourceTree = "<group>"; };
 		74D5A4F51C9DD9AF00FE1F47 /* bad_buffer_exception.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = bad_buffer_exception.cpp; sourceTree = "<group>"; };
 		74D5A4F61C9DD9AF00FE1F47 /* bad_buffer_exception.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bad_buffer_exception.h; sourceTree = "<group>"; };
 		74D5A4F71C9DD9AF00FE1F47 /* badgerdb_exception.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = badgerdb_exception.cpp; sourceTree = "<group>"; };
@@ -106,21 +106,20 @@
 		74D5A4EE1C9DD9AF00FE1F47 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				74D5A4EF1C9DD9AF00FE1F47 /* buffer.cpp */,
 				74D5A4F01C9DD9AF00FE1F47 /* buffer.h */,
-				74D5A4F11C9DD9AF00FE1F47 /* bufHashTbl.cpp */,
+				74D5A4EF1C9DD9AF00FE1F47 /* buffer.cpp */,
 				74D5A4F21C9DD9AF00FE1F47 /* bufHashTbl.h */,
-				74D5A4F31C9DD9AF00FE1F47 /* Contributors */,
-				74D5A4F41C9DD9AF00FE1F47 /* exceptions */,
-				74D5A5151C9DD9AF00FE1F47 /* file.cpp */,
+				74D5A4F11C9DD9AF00FE1F47 /* bufHashTbl.cpp */,
 				74D5A5161C9DD9AF00FE1F47 /* file.h */,
+				74D5A5151C9DD9AF00FE1F47 /* file.cpp */,
 				74D5A5171C9DD9AF00FE1F47 /* file_iterator.h */,
-				74D5A5181C9DD9AF00FE1F47 /* main.cpp */,
 				74D5A5191C9DD9AF00FE1F47 /* main.hpp */,
-				74D5A51A1C9DD9AF00FE1F47 /* page.cpp */,
+				74D5A5181C9DD9AF00FE1F47 /* main.cpp */,
 				74D5A51B1C9DD9AF00FE1F47 /* page.h */,
+				74D5A51A1C9DD9AF00FE1F47 /* page.cpp */,
 				74D5A51C1C9DD9AF00FE1F47 /* page_iterator.h */,
 				74D5A51D1C9DD9AF00FE1F47 /* types.h */,
+				74D5A4F41C9DD9AF00FE1F47 /* exceptions */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -128,6 +127,7 @@
 		74D5A4F41C9DD9AF00FE1F47 /* exceptions */ = {
 			isa = PBXGroup;
 			children = (
+				74D5A4F31C9DD9AF00FE1F47 /* Contributors */,
 				74D5A4F51C9DD9AF00FE1F47 /* bad_buffer_exception.cpp */,
 				74D5A4F61C9DD9AF00FE1F47 /* bad_buffer_exception.h */,
 				74D5A4F71C9DD9AF00FE1F47 /* badgerdb_exception.cpp */,
