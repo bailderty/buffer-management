@@ -6,7 +6,7 @@ class BufMgr
     private:
         badgerdb::FrameId clockHand; // clock hand for clock alg
         badgerdb::BufHashTbl *hashTable; // hash table mapping (File, page) to framed number
-        badgerdb::BufDesc *bufDescTabe; // BufDesc objects, one per frame
+        badgerdb::BufDesc *bufDescTable; // BufDesc objects, one per frame
         std::uint32_t numBufs; // Numer of frames in the buffer pool
         badgerdb::BufStats bufStats; // Statistics about buffer pool usage
 
