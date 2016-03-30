@@ -16,4 +16,5 @@ BufMgr::BufMgr(std::uint32_t bufs)
     BufMgr::hashTable = new badgerdb::BufHashTbl(bufs);
     BufMgr::bufStats = * new badgerdb::BufStats();
     //BufMgr::bufDescTable = new badgerdb::BufDesc();
+    bufPool = new badgerdb::Page[bufs];
 }
