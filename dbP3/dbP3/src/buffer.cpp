@@ -74,6 +74,7 @@ namespace badgerdb {
                         {
                             //flush page to disk
                             bufDescTable[clockHand].file->writePage(bufPool[clockHand]);
+                            bufDescTable[clockHand].dirty = false;
                         }
                         //remove frame from hashtable
                         hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
@@ -112,7 +113,37 @@ namespace badgerdb {
     
     void BufMgr::flushFile(const File* file)
     {
-        
+        //interate through bufdesctable
+        for (int i = 0; i < numBufs; i++)
+        {
+            //file was found in bufdesctable
+            if (bufDescTable[i].file == file)
+            {
+                //pinned
+                if (bufDescTable[i].pinCnt > 0)
+                {
+                    throw PagePinnedException(bufDescTable[i].file->filename(), bufDescTable[i].pageNo, bufDescTable[i].frameNo);
+                }
+                //invalid
+                else if (bufDescTable[i].valid == false)
+                {
+                    throw BadBufferException(bufDescTable[i].frameNo, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
+                }
+                else
+                {
+                    //bit is dirty
+                    if (bufDescTable[i].dirty)
+                    {
+                        //flush page to disk
+                        bufDescTable[i].file->writePage(bufPool[i]);
+                        bufDescTable[i].dirty = false;
+                    }
+                    //remove frame from hashtable
+                    hashTable->remove(bufDescTable[i].file, bufDescTable[i].pageNo);
+                    bufDescTable[i].Clear();
+                }
+            }
+        }
     }
     
     void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
