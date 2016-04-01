@@ -80,6 +80,7 @@ namespace badgerdb {
                         hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
                         bufDescTable[clockHand].Clear();
                         frameFreed = true;
+                        frame = clockHand;
                         return;
                     }
                 }
@@ -90,6 +91,7 @@ namespace badgerdb {
                 hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
                 bufDescTable[clockHand].Clear();
                 frameFreed = true;
+                frame = clockHand;
                 return;
             }
         }
@@ -108,7 +110,22 @@ namespace badgerdb {
     
     void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
     {
-        
+        try
+        {
+            hashTable->lookup(file,pageNo,clockHand);
+            if (bufDescTable[clockHand].pinCnt > 0)
+            {
+                bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt - 1;
+            }
+            else
+            {
+                throw PageNotPinnedException(bufDescTable[clockHand].file->filename(), pageNo, clockHand);
+            }
+        }
+        catch (HashNotFoundException())
+        {
+            std::cout << "HashNotFoundException() in BufMgr::unPinPage()";
+        }
     }
     
     void BufMgr::flushFile(const File* file)
@@ -148,14 +165,34 @@ namespace badgerdb {
     
     void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     {
-        
+        Page p = file->allocatePage(); //returns the allocated page
+        pageNo = p.page_number();
+        BufMgr::allocBuf(clockHand); //returns frameId -> clockHand
+        hashTable->insert(file, pageNo, clockHand);
+        bufDescTable[clockHand].Set(file, pageNo);
+        page = &bufPool[clockHand];
     }
     
     void BufMgr::disposePage(File* file, const PageId PageNo)
     {
-        
+        //iterate through bufDescTable
+        for (int i = 0; i < numBufs; i++)
+        {
+            //if file and pageNo are found
+           if (bufDescTable[i].file == file && bufDescTable[i].pageNo == PageNo)
+           {
+               //delete from bufPool, hashTable, and BufDescTable
+               //delete bufPool[i];
+               //bufDescTable[i].file->deletePage(bufPool[i]);
+               //*(bufPool + i) = nullptr;
+               hashTable->remove(bufDescTable[i].file, bufDescTable[i].pageNo);
+               bufDescTable[i].Clear();
+               file->deletePage(PageNo);
+
+           }
+        }
     }
-    
+
     void BufMgr::printSelf(void)
     {
         BufDesc* tmpbuf;
