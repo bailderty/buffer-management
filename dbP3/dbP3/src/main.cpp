@@ -112,7 +112,6 @@ void testBufMgr()
   const std::string& filename3 = "test.3";
   const std::string& filename4 = "test.4";
   const std::string& filename5 = "test.5";
-
   try
 	{
     File::remove(filename1);
@@ -124,7 +123,6 @@ void testBufMgr()
 	catch(FileNotFoundException e)
 	{
   }
-
 	File file1 = File::create(filename1);
 	File file2 = File::create(filename2);
 	File file3 = File::create(filename3);
@@ -141,27 +139,27 @@ void testBufMgr()
 	//Comment tests which you do not wish to run now. Tests are dependent on their preceding tests. So, they have to be run in the following order. 
 	//Commenting  a particular test requires commenting all tests that follow it else those tests would fail.
 	test1();
-	test2();
-	test3();
-	test4();
-	test5();
-	test6();
+	//test2();
+	//test3();
+	//test4();
+	//test5();
+	//test6();
 
 	//Close files before deleting them
 	file1.~File();
-	file2.~File();
-	file3.~File();
-	file4.~File();
-	file5.~File();
+	//file2.~File();
+	//file3.~File();
+	//file4.~File();
+	//file5.~File();
 
 	//Delete files
 	File::remove(filename1);
-	File::remove(filename2);
-	File::remove(filename3);
-	File::remove(filename4);
-	File::remove(filename5);
+	//File::remove(filename2);
+	//File::remove(filename3);
+	//File::remove(filename4);
+	//File::remove(filename5);
 
-	delete bufMgr;
+	//delete bufMgr;
 
 	std::cout << "\n" << "Passed all tests." << "\n";
 }
@@ -176,7 +174,6 @@ void test1()
 		rid[i] = page->insertRecord(tmpbuf);
 		bufMgr->unPinPage(file1ptr, pid[i], true);
 	}
-
 	//Reading pages back...
 	for (i = 0; i < num; i++)
 	{

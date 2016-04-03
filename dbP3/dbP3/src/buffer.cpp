@@ -33,8 +33,26 @@ namespace badgerdb {
         clockHand = bufs - 1;
     }
     
-    
-    BufMgr::~BufMgr() {
+    //NOT RIGHT
+    BufMgr::~BufMgr()
+    {
+        std::cout<<"~BufMgr(): line 39\n";
+        for (int i = 0; i < numBufs; i++)
+        {
+            //bit is dirty
+            if (bufDescTable[i].dirty == true)
+            {
+                //flush page to disk
+                std::cout<<"~BufMgr(): line 46\n";
+                std::cout<<bufPool[i].page_number();
+                std::cout<<"~BufMgr(): line 48\n";
+                //bufDescTable[i].file->writePage(bufPool[i]);
+                bufDescTable[i].dirty = false;
+            }
+        }
+        std::cout<<"~BufMgr(): line 50\n";
+        delete bufDescTable;
+        delete bufPool;
     }
     
     void BufMgr::advanceClock()
@@ -53,7 +71,7 @@ namespace badgerdb {
         {
             BufMgr::advanceClock();
             //Valid bit
-            if (bufDescTable[clockHand].valid == true)
+            if (bufDescTable[clockHand].valid)
             {
                 //Ref bit
                 if (bufDescTable[clockHand].refbit == true)
@@ -76,9 +94,6 @@ namespace badgerdb {
                             bufDescTable[clockHand].file->writePage(bufPool[clockHand]);
                             bufDescTable[clockHand].dirty = false;
                         }
-                        //remove frame from hashtable
-                        hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
-                        bufDescTable[clockHand].Clear();
                         frameFreed = true;
                         frame = clockHand;
                         return;
@@ -87,9 +102,6 @@ namespace badgerdb {
             }
             else
             {
-                //remove frame from hashtable
-                hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
-                bufDescTable[clockHand].Clear();
                 frameFreed = true;
                 frame = clockHand;
                 return;
@@ -104,7 +116,22 @@ namespace badgerdb {
     
     void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
     {
-        
+        try {
+            hashTable->lookup(file, pageNo, clockHand);
+            //look up was successful
+            bufDescTable[clockHand].refbit = true;
+            bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt + 1;
+            page = &bufPool[clockHand];
+            
+        } catch (HashNotFoundException()) {
+            //look up was unsucessful
+            allocBuf(clockHand);
+            Page p = file->readPage(pageNo);
+            hashTable->insert(file,p.page_number(),clockHand);
+            bufDescTable[clockHand].Set(file, p.page_number());
+            page = &bufPool[clockHand];
+            
+        }
     }
     
     
@@ -116,6 +143,10 @@ namespace badgerdb {
             if (bufDescTable[clockHand].pinCnt > 0)
             {
                 bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt - 1;
+                if (dirty == true)
+                {
+                    bufDescTable[clockHand].dirty = true;
+                }
             }
             else
             {
@@ -149,7 +180,7 @@ namespace badgerdb {
                 else
                 {
                     //bit is dirty
-                    if (bufDescTable[i].dirty)
+                    if (bufDescTable[i].dirty == true)
                     {
                         //flush page to disk
                         bufDescTable[i].file->writePage(bufPool[i]);
