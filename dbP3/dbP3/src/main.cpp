@@ -133,31 +133,31 @@ void testBufMgr()
 	file2ptr = &file2;
 	file3ptr = &file3;
 	file4ptr = &file4;
-	file5ptr = &file5;
+    file5ptr = &file5;
 
 	//Test buffer manager
 	//Comment tests which you do not wish to run now. Tests are dependent on their preceding tests. So, they have to be run in the following order. 
 	//Commenting  a particular test requires commenting all tests that follow it else those tests would fail.
 	test1();
-	//test2();
-	//test3();
-	//test4();
+	test2();
+	test3();
+	test4();
 	//test5();
 	//test6();
 
 	//Close files before deleting them
 	file1.~File();
-	//file2.~File();
-	//file3.~File();
-	//file4.~File();
-	//file5.~File();
+	file2.~File();
+	file3.~File();
+	file4.~File();
+	file5.~File();
 
 	//Delete files
 	File::remove(filename1);
-	//File::remove(filename2);
-	//File::remove(filename3);
-	//File::remove(filename4);
-	//File::remove(filename5);
+	File::remove(filename2);
+	File::remove(filename3);
+	File::remove(filename4);
+	File::remove(filename5);
 
 	//delete bufMgr;
 
@@ -192,13 +192,15 @@ void test2()
 {
 	//Writing and reading back multiple files
 	//The page number and the value should match
+    std::cout<<"Test2: line 195\n";
 
-	for (i = 0; i < num/3; i++) 
+	for (i = 0; i < num/3; i++)
 	{
 		bufMgr->allocPage(file2ptr, pageno2, page2);
+        std::cout<<"Test2: line 200\n";
 		sprintf((char*)tmpbuf, "test.2 Page %d %7.1f", pageno2, (float)pageno2);
 		rid2 = page2->insertRecord(tmpbuf);
-
+        std::cout<<"Test2: line 201\n";
 		int index = random() % num;
     pageno1 = pid[index];
 		bufMgr->readPage(file1ptr, pageno1, page);
@@ -207,10 +209,11 @@ void test2()
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-
+        std::cout<<"Test2: line 210\n";
 		bufMgr->allocPage(file3ptr, pageno3, page3);
 		sprintf((char*)tmpbuf, "test.3 Page %d %7.1f", pageno3, (float)pageno3);
 		rid3 = page3->insertRecord(tmpbuf);
+        std::cout<<"Test2: line 214\n";
 
 		bufMgr->readPage(file2ptr, pageno2, page2);
 		sprintf((char*)&tmpbuf, "test.2 Page %d %7.1f", pageno2, (float)pageno2);
@@ -218,14 +221,14 @@ void test2()
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-
+        std::cout<<"Test2: line 222\n";
 		bufMgr->readPage(file3ptr, pageno3, page3);
 		sprintf((char*)&tmpbuf, "test.3 Page %d %7.1f", pageno3, (float)pageno3);
 		if(strncmp(page3->getRecord(rid3).c_str(), tmpbuf, strlen(tmpbuf)) != 0)
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-
+        std::cout<<"Test2: line 229\n";
 		bufMgr->unPinPage(file1ptr, pageno1, false);
 	}
 
@@ -243,7 +246,9 @@ void test3()
 {
 	try
 	{
+        std::cout<<"Test3: line 249\n";
 		bufMgr->readPage(file4ptr, 1, page);
+        std::cout<<"Test3: line 251\n";
 		PRINT_ERROR("ERROR :: File4 should not exist. Exception should have been thrown before execution reaches this point.");
 	}
 	catch(InvalidPageException e)

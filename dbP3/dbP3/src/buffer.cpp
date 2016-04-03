@@ -65,14 +65,16 @@ namespace badgerdb {
         //variables
         bool frameFreed = false;
         int count = 0;
-        
+        std::cout<<"allocBuf: line 68\n";
         // the frame hasn't been set and not all frames are pinned
         while(frameFreed == false && count < numBufs)
         {
             BufMgr::advanceClock();
             //Valid bit
+            std::cout<<"allocBuf: line 74\n";
             if (bufDescTable[clockHand].valid)
             {
+                std::cout<<"allocBuf: line 76\n";
                 //Ref bit
                 if (bufDescTable[clockHand].refbit == true)
                 {
@@ -102,6 +104,7 @@ namespace badgerdb {
             }
             else
             {
+                std::cout<<"allocBuf: line 107\n";
                 frameFreed = true;
                 frame = clockHand;
                 return;
@@ -123,7 +126,7 @@ namespace badgerdb {
             bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt + 1;
             page = &bufPool[clockHand];
             
-        } catch (HashNotFoundException()) {
+        } catch (HashNotFoundException e) {
             //look up was unsucessful
             allocBuf(clockHand);
             Page p = file->readPage(pageNo);
@@ -196,12 +199,18 @@ namespace badgerdb {
     
     void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     {
+        std::cout<<"allocPage: line 199\n";
+        std::cout<<file->filename();
         Page p = file->allocatePage(); //returns the allocated page
+        std::cout<<"allocPage: line 200\n";
         pageNo = p.page_number();
+        std::cout<<"allocPage: line 201\n";
         BufMgr::allocBuf(clockHand); //returns frameId -> clockHand
+        std::cout<<"allocPage: line 203\n";
         hashTable->insert(file, pageNo, clockHand);
         bufDescTable[clockHand].Set(file, pageNo);
         page = &bufPool[clockHand];
+        std::cout<<"allocPage: line 207\n";
     }
     
     void BufMgr::disposePage(File* file, const PageId PageNo)
