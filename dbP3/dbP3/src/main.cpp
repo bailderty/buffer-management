@@ -146,7 +146,6 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
-    std::cout<<"test7()\n";
     test7();
 	//Close files before deleting them
 	file1.~File();
