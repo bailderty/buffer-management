@@ -64,17 +64,14 @@ namespace badgerdb {
     {
         //variables
         bool frameFreed = false;
-        int count = 0;
-        std::cout<<"allocBuf: line 68\n";
+        int countPinned = 0;
         // the frame hasn't been set and not all frames are pinned
-        while(frameFreed == false && count < numBufs)
+        while(frameFreed == false && countPinned < numBufs)
         {
             BufMgr::advanceClock();
             //Valid bit
-            std::cout<<"allocBuf: line 74\n";
             if (bufDescTable[clockHand].valid)
             {
-                std::cout<<"allocBuf: line 76\n";
                 //Ref bit
                 if (bufDescTable[clockHand].refbit == true)
                 {
@@ -85,7 +82,7 @@ namespace badgerdb {
                     //pinned
                     if (bufDescTable[clockHand].pinCnt != 0)
                     {
-                        count++;
+                        countPinned++;
                     }
                     else
                     {
@@ -104,14 +101,13 @@ namespace badgerdb {
             }
             else
             {
-                std::cout<<"allocBuf: line 107\n";
                 frameFreed = true;
                 frame = clockHand;
                 return;
             }
         }
         //if all pages are pinned throw excepton
-        if(count >= numBufs && frameFreed == false)
+        if(countPinned >= numBufs && frameFreed == false)
         {
             throw BufferExceededException();
         }
@@ -121,6 +117,7 @@ namespace badgerdb {
     {
         try {
             hashTable->lookup(file, pageNo, clockHand);
+            std::cout<<"readPage: line 124\n";
             //look up was successful
             bufDescTable[clockHand].refbit = true;
             bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt + 1;
@@ -128,6 +125,7 @@ namespace badgerdb {
             
         } catch (HashNotFoundException e) {
             //look up was unsucessful
+            std::cout<<"readPage: line 132\n";
             allocBuf(clockHand);
             Page p = file->readPage(pageNo);
             hashTable->insert(file,p.page_number(),clockHand);
@@ -156,7 +154,7 @@ namespace badgerdb {
                 throw PageNotPinnedException(bufDescTable[clockHand].file->filename(), pageNo, clockHand);
             }
         }
-        catch (HashNotFoundException())
+        catch (HashNotFoundException e)
         {
             std::cout << "HashNotFoundException() in BufMgr::unPinPage()";
         }
@@ -167,9 +165,13 @@ namespace badgerdb {
         //interate through bufdesctable
         for (int i = 0; i < numBufs; i++)
         {
+            std::cout<<"flushFile: line 170\n";
             //file was found in bufdesctable
-            if (bufDescTable[i].file == file)
+            std::cout<<bufDescTable[i].file->filename()<<std::endl;
+            std::cout<<file->filename()<<std::endl;
+            if (bufDescTable[i].file->filename() == file->filename())
             {
+                std::cout<<"flushFile: line 173\n";
                 //pinned
                 if (bufDescTable[i].pinCnt > 0)
                 {
@@ -199,18 +201,13 @@ namespace badgerdb {
     
     void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     {
-        std::cout<<"allocPage: line 199\n";
-        std::cout<<file->filename();
+        std::cout<<file->filename()<<std::endl;
         Page p = file->allocatePage(); //returns the allocated page
-        std::cout<<"allocPage: line 200\n";
         pageNo = p.page_number();
-        std::cout<<"allocPage: line 201\n";
         BufMgr::allocBuf(clockHand); //returns frameId -> clockHand
-        std::cout<<"allocPage: line 203\n";
         hashTable->insert(file, pageNo, clockHand);
         bufDescTable[clockHand].Set(file, pageNo);
         page = &bufPool[clockHand];
-        std::cout<<"allocPage: line 207\n";
     }
     
     void BufMgr::disposePage(File* file, const PageId PageNo)
@@ -219,7 +216,7 @@ namespace badgerdb {
         for (int i = 0; i < numBufs; i++)
         {
             //if file and pageNo are found
-           if (bufDescTable[i].file == file && bufDescTable[i].pageNo == PageNo)
+           if (bufDescTable[i].file->filename() == file->filename() && bufDescTable[i].pageNo == PageNo)
            {
                //delete from bufPool, hashTable, and BufDescTable
                //delete bufPool[i];
