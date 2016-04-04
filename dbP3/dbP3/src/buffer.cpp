@@ -199,15 +199,25 @@ namespace badgerdb {
         }
     }
     
-    void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
+    /*void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     {
-        std::cout<<file->filename()<<std::endl;
         Page p = file->allocatePage(); //returns the allocated page
         pageNo = p.page_number();
         BufMgr::allocBuf(clockHand); //returns frameId -> clockHand
         hashTable->insert(file, pageNo, clockHand);
         bufDescTable[clockHand].Set(file, pageNo);
-        page = &bufPool[clockHand];
+        page = &p;
+        bufPool[clockHand] = p;
+    }*/
+    
+    void BufMgr::allocPages(File* file, PageId &pageNo, Page*& page)
+    {
+        FrameId tempFrameID; Page newPage;
+        newPage = file->allocatePage();
+        pageNo = newPage.page_number(); //return pageNo by reference
+        hashTable->insert(file, PageNo, tempFrameID);
+        bufDescTable[clockHand].Set(file,pageNo);
+        page = &bufPool[tempFrameID];
     }
     
     void BufMgr::disposePage(File* file, const PageId PageNo)

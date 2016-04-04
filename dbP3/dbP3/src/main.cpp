@@ -138,7 +138,7 @@ void testBufMgr()
 	//Test buffer manager
 	//Comment tests which you do not wish to run now. Tests are dependent on their preceding tests. So, they have to be run in the following order. 
 	//Commenting  a particular test requires commenting all tests that follow it else those tests would fail.
-	test1();
+	//test1();
 	test2();
 	test3();
 	test4();
@@ -170,10 +170,13 @@ void test1()
 	for (i = 0; i < num; i++)
 	{
 		bufMgr->allocPage(file1ptr, pid[i], page);
+        std::cout<<"Test1: line 173\n";
 		sprintf((char*)tmpbuf, "test.1 Page %d %7.1f", pid[i], (float)pid[i]);
 		rid[i] = page->insertRecord(tmpbuf);
+        std::cout<<"Test1: line 176\n";
 		bufMgr->unPinPage(file1ptr, pid[i], true);
 	}
+    std::cout<<"Test1: line 180\n";
 	//Reading pages back...
 	for (i = 0; i < num; i++)
 	{
