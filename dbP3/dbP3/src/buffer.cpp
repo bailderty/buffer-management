@@ -64,12 +64,7 @@ namespace badgerdb {
     {
         //variables
         bool frameFreed = false;
-<<<<<<< HEAD
         int countPinned = 0;
-=======
-        int count = 0;
-        
->>>>>>> parent of 25a6569... Tests 1 through 4 pass
         // the frame hasn't been set and not all frames are pinned
         while(frameFreed == false && countPinned < numBufs)
         {
@@ -209,10 +204,10 @@ namespace badgerdb {
         Page p = file->allocatePage(); //returns the allocated page
         pageNo = p.page_number();
         BufMgr::allocBuf(clockHand); //returns frameId -> clockHand
+        bufPool[clockHand] = p;
         hashTable->insert(file, pageNo, clockHand);
         bufDescTable[clockHand].Set(file, pageNo);
-        page = &p;
-        bufPool[clockHand] = p;
+        page = &bufPool[clockHand];
     }
     
     
