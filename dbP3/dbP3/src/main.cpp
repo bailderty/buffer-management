@@ -36,6 +36,7 @@ void test3();
 void test4();
 void test5();
 void test6();
+void test7();
 void testBufMgr();
 
 int main() 
@@ -145,7 +146,8 @@ void testBufMgr()
 	test4();
 	test5();
 	test6();
-
+    std::cout<<"test7()\n";
+    test7();
 	//Close files before deleting them
 	file1.~File();
 	file2.~File();
@@ -160,7 +162,7 @@ void testBufMgr()
 	File::remove(filename4);
 	File::remove(filename5);
 
-	//delete bufMgr;
+	delete bufMgr;
 
 	std::cout << "\n" << "Passed all tests." << "\n";
 }
@@ -171,13 +173,10 @@ void test1()
 	for (i = 0; i < num; i++)
 	{
 		bufMgr->allocPage(file1ptr, pid[i], page);
-        std::cout<<"Test1: line 173\n";
 		sprintf((char*)tmpbuf, "test.1 Page %d %7.1f", pid[i], (float)pid[i]);
 		rid[i] = page->insertRecord(tmpbuf);
-        std::cout<<"Test1: line 176\n";
 		bufMgr->unPinPage(file1ptr, pid[i], true);
 	}
-    std::cout<<"Test1: line 180\n";
 	//Reading pages back...
 	for (i = 0; i < num; i++)
 	{
@@ -204,38 +203,31 @@ void test2()
 		rid2 = page2->insertRecord(tmpbuf);
 		int index = random() % num;
         pageno1 = pid[index];
-        std::cout<<"Test2: line 206\n";
 
 		bufMgr->readPage(file1ptr, pageno1, page);
-        std::cout<<"Test2: line 208\n";
 
 		sprintf((char*)tmpbuf, "test.1 Page %d %7.1f", pageno1, (float)pageno1);
 		if(strncmp(page->getRecord(rid[index]).c_str(), tmpbuf, strlen(tmpbuf)) != 0)
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-        std::cout<<"Test2: line 213\n";
 		bufMgr->allocPage(file3ptr, pageno3, page3);
 		sprintf((char*)tmpbuf, "test.3 Page %d %7.1f", pageno3, (float)pageno3);
 		rid3 = page3->insertRecord(tmpbuf);
-        std::cout<<"Test2: line 217\n";
 		bufMgr->readPage(file2ptr, pageno2, page2);
 		sprintf((char*)&tmpbuf, "test.2 Page %d %7.1f", pageno2, (float)pageno2);
 		if(strncmp(page2->getRecord(rid2).c_str(), tmpbuf, strlen(tmpbuf)) != 0)
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-        std::cout<<"Test2: line 224\n";
 		bufMgr->readPage(file3ptr, pageno3, page3);
 		sprintf((char*)&tmpbuf, "test.3 Page %d %7.1f", pageno3, (float)pageno3);
 		if(strncmp(page3->getRecord(rid3).c_str(), tmpbuf, strlen(tmpbuf)) != 0)
 		{
 			PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
 		}
-        std::cout<<"Test2: line 230\n";
 		bufMgr->unPinPage(file1ptr, pageno1, false);
 	}
-    std::cout<<"Test2: line 233\n";
 
 	for (i = 0; i < num/3; i++) {
 		bufMgr->unPinPage(file2ptr, i+1, true);
@@ -243,7 +235,6 @@ void test2()
 		bufMgr->unPinPage(file3ptr, i+1, true);
 		bufMgr->unPinPage(file3ptr, i+1, true);
 	}
-    std::cout<<"Test2: line 241\n";
 	std::cout << "Test 2 passed" << "\n";
 }
 
@@ -305,7 +296,6 @@ void test6()
 {
 	//flushing file with pages still pinned. Should generate an error
 	for (i = 1; i <= num; i++) {
-        std::cout<<"Test6: line 304\n";
 		bufMgr->readPage(file1ptr, i, page);
 	}
 
@@ -324,4 +314,16 @@ void test6()
 		bufMgr->unPinPage(file1ptr, i, true);
 
 	bufMgr->flushFile(file1ptr);
+}
+void test7()
+{
+    for (i = 1; i <= num; i++) {
+        bufMgr->readPage(file1ptr, i, page);
+        bufMgr->unPinPage(file1ptr, i, false);
+    }
+
+    bufMgr->flushFile(file1ptr);
+    bufMgr->disposePage(file1ptr, i);
+    std::cout << "Test 7 passed" << "\n";
+
 }

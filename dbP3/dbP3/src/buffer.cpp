@@ -3,6 +3,7 @@
  *
  * @section LICENSE
  * Copyright (c) 2012 Database Group, Computer Sciences Department, University of Wisconsin-Madison.
+ * edited by Brett Meyer 9067702986(bmeyer) and Alex Instefjord 906-376-7918 (instefjo)
  */
 
 #include <memory>
@@ -15,7 +16,9 @@
 #include "exceptions/hash_not_found_exception.h"
 
 namespace badgerdb {
-    
+    /**
+     * Constructor of BufMgr class
+     */
     BufMgr::BufMgr(std::uint32_t bufs) : numBufs(bufs) {
         bufDescTable = new BufDesc[bufs];
         
@@ -32,34 +35,41 @@ namespace badgerdb {
         
         clockHand = bufs - 1;
     }
-    
-    //NOT RIGHT
+    /**
+     * Destructor of BufMgr class
+     */
     BufMgr::~BufMgr()
-    {
-        std::cout<<"~BufMgr(): line 39\n";
+    {   //clear, write, and remove from bufDescTable and hashTable
         for (int i = 0; i < numBufs; i++)
         {
-            //bit is dirty
-            if (bufDescTable[i].dirty == true)
-            {
-                //flush page to disk
-                std::cout<<"~BufMgr(): line 46\n";
-                std::cout<<bufPool[i].page_number();
-                std::cout<<"~BufMgr(): line 48\n";
-                //bufDescTable[i].file->writePage(bufPool[i]);
-                bufDescTable[i].dirty = false;
+            if (!bufDescTable[clockHand].valid) {
+                bufDescTable[clockHand].Clear();
+                continue;
             }
+            if (bufDescTable[clockHand].dirty) {
+                bufDescTable[clockHand].file->writePage(bufPool[clockHand]);
+            }
+            hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
+            bufDescTable[clockHand].Clear();
         }
-        std::cout<<"~BufMgr(): line 50\n";
-        delete bufDescTable;
-        delete bufPool;
+        //delete vars
+        delete[] bufPool;
+        delete[] bufDescTable;
+        delete hashTable;
     }
-    
+    /**
+     * Advance clock to next frame in the buffer pool
+     */
     void BufMgr::advanceClock()
     {
         clockHand = (clockHand + 1) % numBufs;
     }
-    
+    /**
+     * Allocate a free frame.
+     *
+     * @param frame   	Frame reference, frame ID of allocated frame returned via this variable
+     * @throws BufferExceededException If no such buffer is found which can be allocated
+     */
     void BufMgr::allocBuf(FrameId & frame)
     {
         //variables
@@ -93,6 +103,9 @@ namespace badgerdb {
                             bufDescTable[clockHand].file->writePage(bufPool[clockHand]);
                             bufDescTable[clockHand].dirty = false;
                         }
+                        //dealloc
+                        hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
+                        bufDescTable[clockHand].Clear();
                         frameFreed = true;
                         frame = clockHand;
                         return;
@@ -101,6 +114,8 @@ namespace badgerdb {
             }
             else
             {
+                //dealloc
+                bufDescTable[clockHand].Clear();
                 frameFreed = true;
                 frame = clockHand;
                 return;
@@ -112,12 +127,19 @@ namespace badgerdb {
             throw BufferExceededException();
         }
     }
-
+    /**
+     * Reads the given page from the file into a frame and returns the pointer to page.
+     * If the requested page is already present in the buffer pool pointer to that frame is returned
+     * otherwise a new frame is allocated from the buffer pool for reading the page.
+     *
+     * @param file   	File object
+     * @param PageNo  Page number in the file to be read
+     * @param page  	Reference to page pointer. Used to fetch the Page object in which requested page from file is read in.
+     */
     void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
     {
         try {
             hashTable->lookup(file, pageNo, clockHand);
-            std::cout<<"readPage: line 124\n";
             //look up was successful
             bufDescTable[clockHand].refbit = true;
             bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt + 1;
@@ -125,7 +147,6 @@ namespace badgerdb {
             
         } catch (HashNotFoundException e) {
             //look up was unsucessful
-            std::cout<<"readPage: line 132\n";
             allocBuf(clockHand);
             Page p = file->readPage(pageNo);
             bufPool[clockHand] = p;
@@ -136,7 +157,15 @@ namespace badgerdb {
         }
     }
     
-    
+    /**
+     * Unpin a page from memory since it is no longer required for it to remain in memory.
+     *
+     * @param file   	File object
+     * @param PageNo  Page number
+     * @param dirty		True if the page to be unpinned needs to be marked dirty
+     * @throws  PageNotPinnedException If the page is not already pinned
+     */
+
     void BufMgr::unPinPage(File* file, const PageId pageNo, const bool dirty)
     {
         try
@@ -144,7 +173,6 @@ namespace badgerdb {
             hashTable->lookup(file,pageNo,clockHand);
             if (bufDescTable[clockHand].pinCnt > 0)
             {
-                std::cout<<"unPinPage: line 145\n";
                 bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt - 1;
                 if (dirty == true)
                 {
@@ -158,22 +186,27 @@ namespace badgerdb {
         }
         catch (HashNotFoundException e)
         {
-            std::cout << "HashNotFoundException() in BufMgr::unPinPage()";
+            //DO NOTHING
+            //std::cout << "HashNotFoundException() in BufMgr::unPinPage()";
         }
     }
-    
+    /**
+     * Writes out all dirty pages of the file to disk.
+     * All the frames assigned to the file need to be unpinned from buffer pool before this function can be successfully called.
+     * Otherwise Error returned.
+     *
+     * @param file   	File object
+     * @throws  PagePinnedException If any page of the file is pinned in the buffer pool
+     * @throws BadBufferException If any frame allocated to the file is found to be invalid
+     */
     void BufMgr::flushFile(const File* file)
     {
         //interate through bufdesctable
         for (int i = 0; i < numBufs; i++)
         {
-            std::cout<<"flushFile: line 170\n";
             //file was found in bufdesctable
-            std::cout<<bufDescTable[i].file->filename()<<std::endl;
-            std::cout<<file->filename()<<std::endl;
             if (bufDescTable[i].file->filename() == file->filename())
             {
-                std::cout<<"flushFile: line 173\n";
                 //pinned
                 if (bufDescTable[i].pinCnt > 0)
                 {
@@ -200,7 +233,14 @@ namespace badgerdb {
             }
         }
     }
-    
+    /**
+     * Allocates a new, empty page in the file and returns the Page object.
+     * The newly allocated page is also assigned a frame in the buffer pool.
+     *
+     * @param file   	File object
+     * @param PageNo  Page number. The number assigned to the page in the file is returned via this reference.
+     * @param page  	Reference to page pointer. The newly allocated in-memory Page object is returned via this reference.
+     */
     void BufMgr::allocPage(File* file, PageId &pageNo, Page*& page)
     {
         Page p = file->allocatePage(); //returns the allocated page
@@ -212,27 +252,38 @@ namespace badgerdb {
         page = &bufPool[clockHand];
     }
     
-    
+    /**
+     * Delete page from file and also from buffer pool if present.
+     * Since the page is entirely deleted from file, its unnecessary to see if the page is dirty.
+     *
+     * @param file   	File object
+     * @param PageNo  Page number
+     */
+
     void BufMgr::disposePage(File* file, const PageId PageNo)
     {
-        //iterate through bufDescTable
-        for (int i = 0; i < numBufs; i++)
+        try
         {
-            //if file and pageNo are found
-           if (bufDescTable[i].file->filename() == file->filename() && bufDescTable[i].pageNo == PageNo)
-           {
-               //delete from bufPool, hashTable, and BufDescTable
-               //delete bufPool[i];
-               //bufDescTable[i].file->deletePage(bufPool[i]);
-               //*(bufPool + i) = nullptr;
-               hashTable->remove(bufDescTable[i].file, bufDescTable[i].pageNo);
-               bufDescTable[i].Clear();
-               file->deletePage(PageNo);
-
-           }
+            hashTable->lookup(file,PageNo,clockHand);
+            if (!bufDescTable[clockHand].valid) {
+                bufDescTable[clockHand].Clear();
+            }
+            if (bufDescTable[clockHand].dirty) {
+                bufDescTable[clockHand].file->writePage(bufPool[clockHand]);
+            }
+            hashTable->remove(bufDescTable[clockHand].file, bufDescTable[clockHand].pageNo);
+            bufDescTable[clockHand].Clear();
+            file->deletePage(PageNo);
+        }
+        catch (HashNotFoundException e)
+        {
+            //do nothing
         }
     }
-
+    
+    /**
+     * Print member variable values.
+     */
     void BufMgr::printSelf(void)
     {
         BufDesc* tmpbuf;
