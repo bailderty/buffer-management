@@ -112,7 +112,7 @@ namespace badgerdb {
             throw BufferExceededException();
         }
     }
-    
+
     void BufMgr::readPage(File* file, const PageId pageNo, Page*& page)
     {
         try {
@@ -123,11 +123,12 @@ namespace badgerdb {
             bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt + 1;
             page = &bufPool[clockHand];
             
-        } catch (HashNotFoundException()) {
+        } catch (HashNotFoundException e) {
             //look up was unsucessful
             std::cout<<"readPage: line 132\n";
             allocBuf(clockHand);
             Page p = file->readPage(pageNo);
+            bufPool[clockHand] = p;
             hashTable->insert(file,p.page_number(),clockHand);
             bufDescTable[clockHand].Set(file, p.page_number());
             page = &bufPool[clockHand];
@@ -143,6 +144,7 @@ namespace badgerdb {
             hashTable->lookup(file,pageNo,clockHand);
             if (bufDescTable[clockHand].pinCnt > 0)
             {
+                std::cout<<"unPinPage: line 145\n";
                 bufDescTable[clockHand].pinCnt = bufDescTable[clockHand].pinCnt - 1;
                 if (dirty == true)
                 {
